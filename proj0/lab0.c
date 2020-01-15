@@ -37,11 +37,10 @@ int main(int argc, char **argv)
   char* input_file = NULL;
   char* output_file = NULL;
 
-  //printf("%d\n", optind);
+  // process all options
   while(1)
     {
       opt = getopt_long(argc, argv, "+:", long_options, NULL);
-      //printf("%d\n", optind);
       if(opt == -1)
 	break;
       
@@ -79,6 +78,7 @@ int main(int argc, char **argv)
 	  break;
 	}
     }
+  
   // check if there is an element that is not an option
   if(optind != argc)
     {
@@ -88,7 +88,8 @@ int main(int argc, char **argv)
       free(output_file);
       exit(1);
     }
-  
+
+  // redirect standard input to specified input file
   if(input)
     {
       int ifd = open(input_file, O_RDONLY);
@@ -109,7 +110,8 @@ int main(int argc, char **argv)
 	  exit(2);
 	}
     }
-  
+
+  // redirect standard output to specified output file
   if(output)
     {
       int ofd = creat(output_file, 0666);
@@ -130,17 +132,20 @@ int main(int argc, char **argv)
 	}
     }
 
+  // register a handler for segmentation fault
   if(catch)
     {
       signal(SIGSEGV, sig_handler);
     }
 
+  // force a segmentation fault
   if(segfault)
     {
       char* danger = NULL;
       *danger = 'a';
     }
-  
+
+  // copy from standard input to standard output
   char c;
   while(read(0, &c, 1) > 0){
     write(1, &c, 1);
