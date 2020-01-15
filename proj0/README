@@ -1,0 +1,26 @@
+NAME: Senyang Jiang
+EMAIL: senyangjiang@yahoo.com
+ID: 505111806
+
+Included files:
+	 1.lab0.c: source code for this project
+	 2.Makefile: This makefile supports four targets:
+	 	   (default): used to compile the source code to a program named lab0
+		   check: do smoke-test
+		   clean: delete all files created by Makefile
+		   dist: build the distribution tarball
+	 3.backtrace.png: snapshot that shows segfault and associated stack-trace
+	 4.breakpoint.png: snapshot that shows a breakpoint at the bad assignment and variable inspection to comfirm the pointer is indeed NULL
+
+Smoke-test cases in the check target:
+1. Standard input and output
+2. Redirect input and output
+3. Unrecognized argument
+4. Missing argument for an option
+5. Nonexistent input file
+6. Write to an output file without write permission
+7. Catch the forced segmentation fault
+
+Research:
+About writing shell scripts in Makefile:
+https://stackoverflow.com/questions/10121182/multiline-bash-commands-in-makefile
