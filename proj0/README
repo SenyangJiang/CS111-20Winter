@@ -20,6 +20,7 @@ Smoke-test cases in the check target:
 5. Nonexistent input file
 6. Write to an output file without write permission
 7. Catch the forced segmentation fault
+In all of the above cases, we check whether the exit code is correct.
 
 Research:
 About writing shell scripts in Makefile:

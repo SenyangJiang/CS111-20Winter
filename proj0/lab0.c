@@ -125,7 +125,7 @@ int main(int argc, char **argv)
       else
 	{
 	  fprintf(stderr, "Error from --output:\n"
-		  "File '%s' cannot be created\n"
+		  "File '%s' cannot be created or written\n"
 		  "Reason: %s\n", output_file, strerror(errno));
 	  free(output_file);
 	  exit(3);
