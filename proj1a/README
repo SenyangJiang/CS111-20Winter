@@ -1,0 +1,10 @@
+NAME: Senyang Jiang
+EMAIL: senyangjiang@yahoo.com
+ID: 505111806
+
+Included files:
+	 1.lab1a.c: source code for project 1a
+	 2.Makefile: This makefile supports three targets:
+	 	     (default): used to compile the source code to a program named lab1a
+		     clean: delete all files created by Makefile
+		     dist: build the distribution tarball
