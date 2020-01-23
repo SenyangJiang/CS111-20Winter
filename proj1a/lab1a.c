@@ -14,7 +14,7 @@
 #include <string.h>
 #include <errno.h>
 
-#define BUFSIZE 256
+#define BUFSIZE 2048
 struct termios saved_attr;
 void set_input_mode(void) {
   struct termios tattr;
