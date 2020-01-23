@@ -1,3 +1,7 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -14,17 +18,30 @@
 struct termios saved_attr;
 void set_input_mode(void) {
   struct termios tattr;
-  tcgetattr(STDIN_FILENO, &saved_attr);
-  tcgetattr(STDIN_FILENO, &tattr);
+  if(tcgetattr(STDIN_FILENO, &saved_attr) == -1) {
+    fprintf(stderr, "tcgetattr: %s", strerror(errno));
+    exit(1);
+  }
+  if(tcgetattr(STDIN_FILENO, &tattr) == -1) {
+    fprintf(stderr, "tcgetattr: %s", strerror(errno));
+    exit(1);
+  }
   tattr.c_iflag = ISTRIP;
   tattr.c_oflag = 0;
   tattr.c_lflag = 0;
-  tcsetattr(STDIN_FILENO, TCSANOW, &tattr);
+  if(tcsetattr(STDIN_FILENO, TCSANOW, &tattr) == -1) {
+    fprintf(stderr, "tcsetattr: %s", strerror(errno));
+    exit(1);
+  }
 }
 
 void reset_input_mode(void) {
-  tcsetattr(STDIN_FILENO, TCSANOW, &saved_attr);
+  if(tcsetattr(STDIN_FILENO, TCSANOW, &saved_attr) == -1) {
+    fprintf(stderr, "tcsetattr: %s", strerror(errno));
+    exit(1);
+  }
 }
+
 
 int main(int argc, char** argv) {
   
@@ -63,16 +80,19 @@ int main(int argc, char** argv) {
     int pipefd_in[2]; // to shell
     int pipefd_out[2]; // to terminal process
     if(pipe(pipefd_in) == -1) {
-      fprintf(stderr, strerror(errno));
+      fprintf(stderr, "pipe: %s", strerror(errno));
+      reset_input_mode();
       exit(1);
     }
     if(pipe(pipefd_out) == -1) {
-      fprintf(stderr, strerror(errno));
+      fprintf(stderr, "pipe: %s", strerror(errno));
+      reset_input_mode();
       exit(1);
     }
     pid_t c_pid = fork();
     if(c_pid == -1) {
-      fprintf(stderr, strerror(errno));
+      fprintf(stderr, "fork: %s", strerror(errno));
+      reset_input_mode();
       exit(1);
     }
     if(c_pid == 0) {
@@ -90,7 +110,8 @@ int main(int argc, char** argv) {
       close(pipefd_out[1]);
       
       if(execl("/bin/bash", "", (char*)NULL) == -1) {
-	fprintf(stderr, strerror(errno));
+	fprintf(stderr, "execl: %s", strerror(errno));
+	reset_input_mode();
 	exit(1);
       }
     }
@@ -107,43 +128,91 @@ int main(int argc, char** argv) {
       while(1) {
 	int ret = poll(fds, 2, 0);
 	if(ret == -1) {
-	  fprintf(stderr, strerror(errno));
+	  fprintf(stderr, "poll: %s", strerror(errno));
+	  reset_input_mode();
 	  exit(1);
 	}
 	if(ret > 0) {
 	  if(fds[0].revents & POLLIN) { // read input from the keyboard
 	    n = read(fds[0].fd, buffer, BUFSIZE);
+	    if(n == -1) {
+	      fprintf(stderr, "read: %s", strerror(errno));
+	      reset_input_mode();
+	      exit(1);
+	    }
 	    for(int i = 0; i < n; i++) {
 	      if(buffer[i] == '\r' || buffer[i] == '\n') {
-		write(STDOUT_FILENO, "\r\n", 2);
-		write(pipefd_in[1], "\n", 1);
+		if(write(STDOUT_FILENO, "\r\n", 2) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
+		if(write(pipefd_in[1], "\n", 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
 	      }
 	      else if(buffer[i] == 0x03) {
-		write(pipefd_in[1], &buffer[i], 1);
-		write(STDOUT_FILENO, "^C", 2);
+		if(write(pipefd_in[1], &buffer[i], 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
+		if(write(STDOUT_FILENO, "^C", 2) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
 		if(kill(c_pid, SIGINT) == -1) {
-		  fprintf(stderr, strerror(errno));
+		  fprintf(stderr, "kill: %s", strerror(errno));
+		  reset_input_mode();
 		  exit(1);
 		}
 	      }
 	      else if(buffer[i] == 0x04) {
 		close(pipefd_in[1]);
-		write(STDOUT_FILENO, "^D", 2);
+		if(write(STDOUT_FILENO, "^D", 2) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
 	      }
 	      else {
-		write(STDOUT_FILENO, &buffer[i], 1);
-		write(pipefd_in[1], &buffer[i], 1);
+		if(write(STDOUT_FILENO, &buffer[i], 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
+		if(write(pipefd_in[1], &buffer[i], 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
 	      }
 	    }
 	  }
 	  if(fds[1].revents & POLLIN) { //  read input from the shell pipe
 	    n = read(fds[1].fd, buffer, BUFSIZE);
+	    if(n == -1) {
+	      fprintf(stderr, "read: %s", strerror(errno));
+	      reset_input_mode();
+	      exit(1);
+	    }
 	    for(int i = 0; i < n; i++) {
 	      if(buffer[i] == '\n') {
-		write(STDOUT_FILENO, "\r\n", 2);
+		if(write(STDOUT_FILENO, "\r\n", 2) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
 	      }
 	      else {
-		write(STDOUT_FILENO, &buffer[i], 1);
+		if(write(STDOUT_FILENO, &buffer[i], 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  reset_input_mode();
+		  exit(1);
+		}
 	      }
 	    }
 	  }
@@ -154,7 +223,11 @@ int main(int argc, char** argv) {
 	
 	if(exit_shell) {
 	    close(pipefd_out[0]);
-	    waitpid(c_pid, &status, 0);
+	    if(waitpid(c_pid, &status, 0) == -1) {
+	      fprintf(stderr, "waitpid: %s", strerror(errno));
+	      reset_input_mode();
+	      exit(1);
+	    }
 	    fprintf(stderr, "SHELL EXIT SIGNAL=%d STATUS=%d", status&0x007f, (status&0xff00)>>8);
 	    reset_input_mode();
 	    exit(0);
@@ -165,12 +238,25 @@ int main(int argc, char** argv) {
   
   while(1) {
     n = read(STDIN_FILENO, buffer, BUFSIZE);
+    if(n == -1) {
+      fprintf(stderr, "read: %s", strerror(errno));
+      reset_input_mode();
+      exit(1);
+    }
     for(int i = 0; i < n; i++) {
       if(buffer[i] == '\r' || buffer[i] == '\n') {
-	write(STDOUT_FILENO, "\r\n", 2);
+	if(write(STDOUT_FILENO, "\r\n", 2) == -1) {
+	  fprintf(stderr, "write: %s", strerror(errno));
+	  reset_input_mode();
+	  exit(1);
+	}
       }
       else {
-	write(STDOUT_FILENO, &buffer[i], 1);
+	if(write(STDOUT_FILENO, &buffer[i], 1) == -1) {
+	  fprintf(stderr, "write: %s", strerror(errno));
+	  reset_input_mode();
+	  exit(1);
+	}
       }
       if(buffer[i] == 0x04) {
 	reset_input_mode();
