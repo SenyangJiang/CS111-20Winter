@@ -16,26 +16,33 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include "zlib.h"
 
 #define BUFSIZE 2048
 
 int main(int argc, char** argv) {
-  if(argc < 2) {
-    fprintf(stderr, "too few arguments, need to specify port\n");
-    exit(1);
-  }
+
+  int port_flag = 0;
+  int compress_flag = 0;
   int opt;
-  struct option long_options[2] = {{"port", required_argument, NULL, 'p'},
+  struct option long_options[3] = {{"port", required_argument, NULL, 'p'},
+				   {"compress", no_argument, NULL, 'c'},
 				{0, 0, 0, 0}};
 
   int portno;
+  z_stream def_strm;
+  z_stream inf_strm;
   while(1) {
     opt = getopt_long(argc, argv, ":", long_options, NULL);
     if(opt == -1)
       break;
     switch(opt) {
     case 'p':
+      port_flag = 1;
       portno = atoi(optarg);
+      break;
+    case 'c':
+      compress_flag = 1;
       break;
     case '?':
       fprintf(stderr, "Unrecognized argument: %s\n",  argv[optind-1]);
@@ -53,7 +60,33 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Unrecognized argument: %s\n", argv[optind]);
     exit(1);
   }
-  
+
+  if(!port_flag) {
+    fprintf(stderr, "need to specify port number");
+    exit(1);
+  }
+
+  if(compress_flag) {
+    // initialize deflation
+    def_strm.zalloc = Z_NULL;
+    def_strm.zfree = Z_NULL;
+    def_strm.opaque = Z_NULL;
+    if(deflateInit(&def_strm, Z_DEFAULT_COMPRESSION) != Z_OK) {
+      fprintf(stderr, "Error on deflateInit");
+      exit(1);
+    }
+    // initialize inflation
+    inf_strm.zalloc = Z_NULL;
+    inf_strm.zfree = Z_NULL;
+    inf_strm.opaque = Z_NULL;
+    inf_strm.avail_in = 0;
+    inf_strm.next_in = Z_NULL;
+    if(inflateInit(&inf_strm) != Z_OK) {
+      fprintf(stderr, "Error on inflateInit");
+      exit(1);
+    }
+  }
+
   int sockfd, newsockfd, n;
   socklen_t cli_len;
   char buffer[BUFSIZE];
@@ -140,24 +173,67 @@ int main(int argc, char** argv) {
 	    fprintf(stderr, "read: %s", strerror(errno));
 	    exit(1);
 	  }
-	  for(int i = 0; i < n; i++) {
-	    if(buffer[i] == 0x03) {
-	      if(write(pipefd_in[1], &buffer[i], 1) == -1) {
-		fprintf(stderr, "write: %s", strerror(errno));
-		exit(1);
+	  if(compress_flag) {
+	    int have;
+	    char out[BUFSIZE];
+	    
+	    inf_strm.avail_in = n;
+	    inf_strm.next_in = (unsigned char*)buffer;
+	    inf_strm.avail_out = BUFSIZE;
+	    inf_strm.next_out = (unsigned char*)out;
+	    do {
+	      inflate(&inf_strm, Z_SYNC_FLUSH);
+	    } while (inf_strm.avail_in > 0);
+	    have = BUFSIZE - inf_strm.avail_out;
+	    //if(have > 0) {
+	    //  fprintf(stderr, "%d", have);
+	    //}
+	    for(int i = 0; i < have; i++) {
+	      if(out[i] == 0x03) {
+		if(kill(c_pid, SIGINT) == -1) {
+		  fprintf(stderr, "kill: %s", strerror(errno));
+		  exit(1);
+		}
 	      }
-	      if(kill(c_pid, SIGINT) == -1) {
-		fprintf(stderr, "kill: %s", strerror(errno));
-		exit(1);
+	      else if(out[i] == 0x04) {
+		close(pipefd_in[1]);
+	      }
+	      else if(out[i] == '\r') { // <cr> goes into shell as <lf> 
+		if(write(pipefd_in[1], "\n", 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  exit(1);
+		}
+	      }
+	      else {
+		if(write(pipefd_in[1], &out[i], 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  exit(1);
+		}
 	      }
 	    }
-	    else if(buffer[i] == 0x04) {
-	      close(pipefd_in[1]);
-	    }
-	    else {
-	      if(write(pipefd_in[1], &buffer[i], 1) == -1) {
-		fprintf(stderr, "write: %s", strerror(errno));
-		exit(1);
+	  }
+	  else {
+	    for(int i = 0; i < n; i++) {
+	      if(buffer[i] == 0x03) {
+		if(kill(c_pid, SIGINT) == -1) {
+		  fprintf(stderr, "kill: %s", strerror(errno));
+		  exit(1);
+		}
+	      }
+	      else if(buffer[i] == 0x04) {
+		close(pipefd_in[1]);
+	      }
+	      else if(buffer[i] == '\r') { // <cr> goes into shell as <lf>
+		if(write(pipefd_in[1], "\n", 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  exit(1);
+		}
+	      }
+	      else {
+		if(write(pipefd_in[1], &buffer[i], 1) == -1) {
+		  fprintf(stderr, "write: %s", strerror(errno));
+		  exit(1);
+		}
 	      }
 	    }
 	  }
@@ -168,8 +244,25 @@ int main(int argc, char** argv) {
 	    fprintf(stderr, "read: %s", strerror(errno));
 	    exit(1);
 	  }
-	  for(int i = 0; i < n; i++) {
-	    if(write(newsockfd, &buffer[i], 1) == -1) {
+	  if(compress_flag) {
+	    int have;
+	    char out[BUFSIZE];
+
+	    def_strm.avail_in = n;
+	    def_strm.next_in = (unsigned char*)buffer;
+	    def_strm.avail_out = BUFSIZE;
+	    def_strm.next_out = (unsigned char*)out;
+	    do {
+	      deflate(&def_strm, Z_SYNC_FLUSH);
+	    } while (def_strm.avail_in > 0);
+	    have = BUFSIZE - def_strm.avail_out;
+	    if(write(newsockfd, out, have) == -1) {
+	      fprintf(stderr, "write: %s", strerror(errno));
+	      exit(1);
+	    }
+	  }
+	  else {
+	    if(write(newsockfd, buffer, n) == -1) {
 	      fprintf(stderr, "write: %s", strerror(errno));
 	      exit(1);
 	    }
@@ -192,6 +285,10 @@ int main(int argc, char** argv) {
 	  fprintf(stderr, "SHELL EXIT SIGNAL=%d STATUS=%d", status&0x007f, (status&0xff00)>>8);
 	  close(sockfd);
 	  close(newsockfd);
+	  if(compress_flag) {
+	    deflateEnd(&def_strm);
+	    inflateEnd(&inf_strm);
+	  }
 	  exit(0);
       }
     }

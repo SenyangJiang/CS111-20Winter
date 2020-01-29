@@ -1,0 +1,13 @@
+NAME: Senyang Jiang
+EMAIL: senyangjiang@yahoo.com
+ID: 505111806
+
+Included files:
+	 1.lab1b-client.c: source code of the client for proj1b
+	 2.lab1b-server.c: source code of the server for proj1b
+	 3.Makefile: This makefile supports five targets:
+	 	     (default): build both the client program(lab1b-client) and server program(lab1b-server)
+		     client: build the client program(lab1b-client)
+		     server: build the server program(lab1b-server)
+		     clean: delete all files created by Makefile
+		     dist: build the distribution tarball
