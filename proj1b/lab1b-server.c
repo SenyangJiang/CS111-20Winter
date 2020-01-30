@@ -185,9 +185,6 @@ int main(int argc, char** argv) {
 	      inflate(&inf_strm, Z_SYNC_FLUSH);
 	    } while (inf_strm.avail_in > 0);
 	    have = BUFSIZE - inf_strm.avail_out;
-	    //if(have > 0) {
-	    //  fprintf(stderr, "%d", have);
-	    //}
 	    for(int i = 0; i < have; i++) {
 	      if(out[i] == 0x03) {
 		if(kill(c_pid, SIGINT) == -1) {

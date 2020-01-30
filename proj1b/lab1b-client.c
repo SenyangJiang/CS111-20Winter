@@ -82,12 +82,14 @@ int main(int argc, char** argv) {
       compress_flag = 1;
       break;
     case '?':
-      fprintf(stderr, "Unrecognized argument: %s\n",  argv[optind-1]);
+      fprintf(stderr, "Unrecognized argument: %s\n"
+	      "Correct usage: %s --port=portno (--log=filename) (--compress)", argv[optind-1], argv[0]);
       free(logfile);
       exit(1);
       break;
     case ':':
-      fprintf(stderr, "Missing argument for %s\n", argv[optind-1]);
+      fprintf(stderr, "Missing argument for %s\n"
+	      "Correct usage: %s --port=portno (--log=filename) (--compress)", argv[optind-1], argv[0]);
       free(logfile);
       exit(1);
       break;
@@ -96,7 +98,8 @@ int main(int argc, char** argv) {
 
   if(optind != argc)
   {
-    fprintf(stderr, "Unrecognized argument: %s\n", argv[optind]);
+    fprintf(stderr, "Unrecognized argument: %s\n"
+	    "Correct usage: %s --port=portno (--log=filename) (--compress)", argv[optind], argv[0]);
     free(logfile);
     exit(1);
   }
@@ -227,7 +230,6 @@ int main(int argc, char** argv) {
 	  }
 	}
 	if(compress_flag) {
-	  //fprintf(stderr, "entering compression");
 	  int have;
 	  char out[BUFSIZE];
 
@@ -239,9 +241,6 @@ int main(int argc, char** argv) {
 	    deflate(&def_strm, Z_SYNC_FLUSH);
 	  } while (def_strm.avail_in > 0);
 	  have = BUFSIZE - def_strm.avail_out;
-	  //if(have > 0) {
-	  //  fprintf(stderr, "%d", have);
-	  //}
 	  write(sockfd, out, have);
 	  if(log_flag) {
 	    char s[20];
@@ -254,7 +253,11 @@ int main(int argc, char** argv) {
 	  }
 	}
 	else {
-	  write(sockfd, buffer, n);
+	  if(write(sockfd, buffer, n) == -1) {
+	    fprintf(stderr, "write: %s", strerror(errno));
+	    reset_input_mode();
+	    exit(1);
+	  }
 	  if(log_flag) {
 	    char s[20];
 	    int l = sprintf(s, "%d", n);
@@ -285,16 +288,16 @@ int main(int argc, char** argv) {
 	}
 	if(compress_flag) {
 	  int have;
-          char out[BUFSIZE];
+          char out[BUFSIZE*4];
 
 	  inf_strm.avail_in = n;
 	  inf_strm.next_in = (unsigned char*)buffer;
-	  inf_strm.avail_out = BUFSIZE;
+	  inf_strm.avail_out = BUFSIZE*4;
 	  inf_strm.next_out = (unsigned char*)out;
 	  do {
 	    inflate(&inf_strm, Z_SYNC_FLUSH);
 	  } while (inf_strm.avail_in > 0);
-	  have = BUFSIZE - inf_strm.avail_out;
+	  have = BUFSIZE*4 - inf_strm.avail_out;
 
 	  for(int i = 0; i < have; i++) {
 	    if(out[i] == '\n') { // if receive <lf> from shell, print as <cr><lf>
