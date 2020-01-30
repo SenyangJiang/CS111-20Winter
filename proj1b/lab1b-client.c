@@ -15,12 +15,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <ulimit.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "zlib.h"
 
 #define BUFSIZE 2048
+
 struct termios saved_attr;
 void set_input_mode(void) {
   struct termios tattr;
@@ -82,13 +82,13 @@ int main(int argc, char** argv) {
       compress_flag = 1;
       break;
     case '?':
-      fprintf(stderr, "Unrecognized argument: %s\n"
+      fprintf(stderr, "Unrecognized argument: %s\r\n"
 	      "Correct usage: %s --port=portno (--log=filename) (--compress)", argv[optind-1], argv[0]);
       free(logfile);
       exit(1);
       break;
     case ':':
-      fprintf(stderr, "Missing argument for %s\n"
+      fprintf(stderr, "Missing argument for %s\r\n"
 	      "Correct usage: %s --port=portno (--log=filename) (--compress)", argv[optind-1], argv[0]);
       free(logfile);
       exit(1);
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
   if(optind != argc)
   {
-    fprintf(stderr, "Unrecognized argument: %s\n"
+    fprintf(stderr, "Unrecognized argument: %s\r\n"
 	    "Correct usage: %s --port=portno (--log=filename) (--compress)", argv[optind], argv[0]);
     free(logfile);
     exit(1);
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
     ofd = creat(logfile, 0666);
     free(logfile);
     if(ofd == -1) {
-      fprintf(stderr, "cannot create logfile");
+      fprintf(stderr, "cannot create logfile: %s", strerror(errno));
       exit(1);
     }
   }
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
     def_strm.zfree = Z_NULL;
     def_strm.opaque = Z_NULL;
     if(deflateInit(&def_strm, Z_DEFAULT_COMPRESSION) != Z_OK) {
-      fprintf(stderr, "Error on deflateInit");
+      fprintf(stderr, "Error on deflateInit: %s", strerror(errno));
       exit(1);
     }
     // initialize inflation
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     inf_strm.avail_in = 0;
     inf_strm.next_in = Z_NULL;
     if(inflateInit(&inf_strm) != Z_OK) {
-      fprintf(stderr, "Error on inflateInit");
+      fprintf(stderr, "Error on inflateInit: %s", strerror(errno));
       exit(1);
     }
   }
@@ -150,13 +150,13 @@ int main(int argc, char** argv) {
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    fprintf(stderr, "error opening socket\n");
+    fprintf(stderr, "error opening socket: %s", strerror(errno));
     reset_input_mode();
     exit(1);
   }
   server = gethostbyname("localhost");
   if(server == NULL) {
-    fprintf(stderr, "ERROR, no such host\n");
+    fprintf(stderr, "ERROR, no such host");
     reset_input_mode();
     exit(1);
   }
@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
 	server->h_length);
   serv_addr.sin_port = htons(portno);
   if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-    fprintf(stderr, "error connecting\n");
+    fprintf(stderr, "error connecting: %s", strerror(errno));
     reset_input_mode();
     exit(1);
   }
@@ -241,7 +241,11 @@ int main(int argc, char** argv) {
 	    deflate(&def_strm, Z_SYNC_FLUSH);
 	  } while (def_strm.avail_in > 0);
 	  have = BUFSIZE - def_strm.avail_out;
-	  write(sockfd, out, have);
+	  if(write(sockfd, out, have) == -1) {
+	    fprintf(stderr, "write: %s", strerror(errno));
+	    reset_input_mode();
+	    exit(1);
+	  }
 	  if(log_flag) {
 	    char s[20];
 	    int l = sprintf(s, "%d", have);
@@ -316,7 +320,7 @@ int main(int argc, char** argv) {
 	    }
 	  }
 	}
-	else {
+	else { // no compress option
 	  for(int i = 0; i < n; i++) {
 	    if(buffer[i] == '\n') { // if receive <lf> from shell, print as <cr><lf>
 	      if(write(STDOUT_FILENO, "\r\n", 2) == -1) {

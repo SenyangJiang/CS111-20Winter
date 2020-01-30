@@ -45,11 +45,13 @@ int main(int argc, char** argv) {
       compress_flag = 1;
       break;
     case '?':
-      fprintf(stderr, "Unrecognized argument: %s\n",  argv[optind-1]);
+      fprintf(stderr, "Unrecognized argument: %s\n"
+	      "Correct usage: %s --port=portno (--compress)", argv[optind-1], argv[0]);
       exit(1);
       break;
     case ':':
-      fprintf(stderr, "Missing argument for %s\n", argv[optind-1]);
+      fprintf(stderr, "Missing argument for %s\n"
+	      "Correct usage: %s --port=portno (--compress)", argv[optind-1], argv[0]);
       exit(1);
       break;
     }
@@ -57,12 +59,13 @@ int main(int argc, char** argv) {
 
   if(optind != argc)
   {
-    fprintf(stderr, "Unrecognized argument: %s\n", argv[optind]);
+    fprintf(stderr, "Unrecognized argument: %s\n"
+	    "Correct usage: %s --port=portno (--compress)", argv[optind], argv[0]);
     exit(1);
   }
 
   if(!port_flag) {
-    fprintf(stderr, "need to specify port number");
+    fprintf(stderr, "need to specify port number\n");
     exit(1);
   }
 
@@ -72,7 +75,7 @@ int main(int argc, char** argv) {
     def_strm.zfree = Z_NULL;
     def_strm.opaque = Z_NULL;
     if(deflateInit(&def_strm, Z_DEFAULT_COMPRESSION) != Z_OK) {
-      fprintf(stderr, "Error on deflateInit");
+      fprintf(stderr, "Error on deflateInit: %s\n", strerror(errno));
       exit(1);
     }
     // initialize inflation
@@ -82,7 +85,7 @@ int main(int argc, char** argv) {
     inf_strm.avail_in = 0;
     inf_strm.next_in = Z_NULL;
     if(inflateInit(&inf_strm) != Z_OK) {
-      fprintf(stderr, "Error on inflateInit");
+      fprintf(stderr, "Error on inflateInit: %s\n", strerror(errno));
       exit(1);
     }
   }
@@ -93,7 +96,7 @@ int main(int argc, char** argv) {
   struct sockaddr_in serv_addr, cli_addr;
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    fprintf(stderr, "error opening socket\n");
+    fprintf(stderr, "error opening socket: %s\n", strerror(errno));
     exit(1);
   }
   bzero((char *)&serv_addr, sizeof(serv_addr));
@@ -101,14 +104,14 @@ int main(int argc, char** argv) {
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   serv_addr.sin_port = htons(portno);
   if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-    fprintf(stderr, "error on binding\n");
+    fprintf(stderr, "error on binding: %s\n", strerror(errno));
     exit(1);
   }
   listen(sockfd, 5);
   cli_len = sizeof(cli_addr);
   newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &cli_len);
   if(newsockfd < 0) {
-    fprintf(stderr, "error on accept\n");
+    fprintf(stderr, "error on accept: %s\n", strerror(errno));
     exit(1);
   }
   
@@ -201,7 +204,7 @@ int main(int argc, char** argv) {
 		  exit(1);
 		}
 	      }
-	      else {
+	      else { 
 		if(write(pipefd_in[1], &out[i], 1) == -1) {
 		  fprintf(stderr, "write: %s", strerror(errno));
 		  exit(1);
@@ -209,7 +212,7 @@ int main(int argc, char** argv) {
 	      }
 	    }
 	  }
-	  else {
+	  else { // no compress option
 	    for(int i = 0; i < n; i++) {
 	      if(buffer[i] == 0x03) {
 		if(kill(c_pid, SIGINT) == -1) {
@@ -258,7 +261,7 @@ int main(int argc, char** argv) {
 	      exit(1);
 	    }
 	  }
-	  else {
+	  else { // no compress
 	    if(write(newsockfd, buffer, n) == -1) {
 	      fprintf(stderr, "write: %s", strerror(errno));
 	      exit(1);
