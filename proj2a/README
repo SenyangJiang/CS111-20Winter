@@ -1,0 +1,15 @@
+NAME: Senyang Jiang
+EMAIL: senyangjiang@yahoo.com
+ID: 505111806
+
+Question 2.1.1:
+It takes many iteration before errors are seen, because the race condition only happens when one thread reads the value and was preempted before it updates the value through the pointer. So the chance of race condition is small and it takes many iterations to produce such race condition. If there is only a small number of iterations, then the expected number of failures is small, so it seldom fails.
+
+Question 2.1.2:
+Because --yield option forces thread to yield when it is about to update the new value. Since the thread yields before its time slice expires, extra time would be spent switching between threads(changing program counter, stack, stack pointer, etc). It is not possible to get valid per-operation timing in this case because the time spent on yielding and switching threads is added to the total time, making the per-operation timing not accurate.
+
+Question 2.1.3:
+As the num of iterations increases, the cost of creating threads becomes less significant, so the average cost per operation drops. If the cost per iteration is a function of the number of iterations, by knowing the value of one we could calculate the value of the other.
+
+Question 2.1.4:
+Only one thread can move throught the critical section at a certain time. When the number of thread is low, not much time is wasted on those threads that are not able to get the lock. As the number of threads rises, the proportion of time wasted on threads waiting for the lock gets larger and hence the three protected operations slow down.
