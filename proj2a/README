@@ -57,14 +57,14 @@ Only one thread can move through the critical section at a certain time. As the 
 
 QUESTION 2.2.1 - scalability of Mutex
 1. Comment on the general shapes of the curves, and explain why they have this shape.
-In part 1 and part 2, the curve increases. As the number of threads increases, the cost of context switch also rises, which explains why cost per operation increases.
+In part 1 and part 2, the curve increases. As the number of threads increases, more threads are competing for a single lock and the cost of context switch also rises, which explains why cost per operation increases.
 
 2. Comment on the relative rates of increase and differences in the shapes of the curves, and offer an explanation for these differences.
 The rate of increase in part 2 is higher than the rate of increase in part 1. This is because list operation is more complex than the adding operation, which means that more locks and unlocks are involved in list operation. So as the number of threads increases, the overhead in part 2 is greater, and the cost per operation increases faster.
 
 QUESTION 2.2.2 - scalability of spin locks
 1. Comment on the general shapes of the curves, and explain why they have this shape.
-As the numeber of threads increases, cost per operation for both spin locks and mutex increases, since the overhead of context switch is larger.
+As the numeber of threads increases, cost per operation for both spin locks and mutex increases, since more threads are competing for a single lock and the overhead of context switch is larger.
 
 2. Comment on the relative rates of increase and differences in the shapes of the curves, and offer an explanation for these differences.
 The rate of increase for Spin lock is higher. As the number of threads increases, for Spin lock much more time was spent on wasteful spinning, but for mutex the waiting threads would sleep and does not consume CPU cycles.
