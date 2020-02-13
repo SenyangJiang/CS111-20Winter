@@ -1,0 +1,279 @@
+#include <unistd.h>
+#include <getopt.h>
+#include "SortedList.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <pthread.h>
+#include <signal.h>
+#include <string.h>
+
+int num_threads = 1;
+int num_iter = 1;
+char sync_opt = 'n';
+int opt_yield = 0;
+SortedList_t head;
+SortedListElement_t *elements;
+pthread_mutex_t mutexlist;
+volatile int lock = 0;
+
+void sig_handler(int signo)
+{
+  fprintf(stderr , "Segmentation Fault! Signal Number:%d\n", signo);
+  exit(2);
+}
+
+void *thread_func(void *thread_id) {
+  long tid = (long)thread_id;
+  for(int i = tid*num_iter; i < (tid+1)*num_iter; i++) {
+    if(sync_opt == 'm') {
+      pthread_mutex_lock(&mutexlist);
+      SortedList_insert(&head, &elements[i]);
+      pthread_mutex_unlock (&mutexlist);
+    }
+    else if(sync_opt == 's') {
+      while (__sync_lock_test_and_set(&lock, 1));
+      SortedList_insert(&head, &elements[i]);
+      __sync_lock_release(&lock);
+    }
+    else{
+      SortedList_insert(&head, &elements[i]);
+    }
+  }
+  
+  int len;
+  if(sync_opt == 'm') {
+    pthread_mutex_lock(&mutexlist);
+    len = SortedList_length(&head);
+    pthread_mutex_unlock (&mutexlist);
+  }
+  else if(sync_opt == 's') {
+    while (__sync_lock_test_and_set(&lock, 1));
+    len = SortedList_length(&head);
+    __sync_lock_release(&lock);
+  }
+  else{
+    len = SortedList_length(&head);
+  }
+
+  if(len == -1) {
+    fprintf(stderr, "Failure in finding list length\n");
+    exit(2);
+  }
+  for(int i = tid*num_iter; i < (tid+1)*num_iter; i++) {
+    SortedListElement_t *e;
+    if(sync_opt == 'm') {
+      pthread_mutex_lock(&mutexlist);
+      e = SortedList_lookup(&head, elements[i].key);
+      pthread_mutex_unlock (&mutexlist);
+    }
+    else if(sync_opt == 's') {
+      while (__sync_lock_test_and_set(&lock, 1));
+      e = SortedList_lookup(&head, elements[i].key);
+      __sync_lock_release(&lock);
+    }
+    else{
+      e = SortedList_lookup(&head, elements[i].key);
+    }
+    if(e == NULL) {
+      fprintf(stderr, "Failure in looking up list element\n");
+      exit(2);
+    }
+    int rc;
+    if(sync_opt == 'm') {
+      pthread_mutex_lock(&mutexlist);
+      rc = SortedList_delete(e);
+      pthread_mutex_unlock (&mutexlist);
+    }
+    else if(sync_opt == 's') {
+      while (__sync_lock_test_and_set(&lock, 1));
+      rc = SortedList_delete(e);
+      __sync_lock_release(&lock);
+    }
+    else{
+      rc = SortedList_delete(e);
+    }
+    if(rc == 1) {
+      fprintf(stderr, "Failure in deleting list element\n");
+      exit(2);
+    }
+  }
+  pthread_exit(NULL);
+}
+int main(int argc, char **argv)
+{
+  int opt;
+  struct option long_options[] = {{"threads", required_argument, NULL, 't'},
+                                  {"iterations", required_argument, NULL, 'i'},
+                                  {"yield", required_argument, NULL, 'y'},
+                                  {"sync", required_argument, NULL, 's'},
+                                  {0, 0, 0, 0}};
+  int len;
+  while(1)
+    {
+      opt = getopt_long(argc, argv, "+:", long_options, NULL);
+      if(opt == -1)
+        break;
+
+      switch(opt)
+        {
+	case 's':
+	  sync_opt = optarg[0];
+	  if(sync_opt != 'm' && sync_opt != 's') {
+	    fprintf(stderr, "invalid sync option\n");
+	    exit(1);
+	  }
+	  break;
+        case 'y':
+	  len = strlen(optarg);
+          for(int i = 0; i < len; i++) {
+	    if(optarg[i] == 'i')
+	      opt_yield |= INSERT_YIELD;
+	    else if(optarg[i] == 'd')
+	      opt_yield |= DELETE_YIELD;
+	    else if(optarg[i] == 'l')
+	      opt_yield |= LOOKUP_YIELD;
+	    else {
+	      fprintf(stderr, "invalid yield option\n");
+	      exit(1);
+	    }
+	  }
+          break;
+        case 't':
+          num_threads = atoi(optarg);
+          break;
+        case 'i':
+          num_iter = atoi(optarg);
+          break;
+        case '?':
+          fprintf(stderr, "Unrecognized argument: %s\n", argv[optind-1]);
+          exit(1);
+          break;
+        case ':':
+          fprintf(stderr, "Missing argument for %s\n", argv[optind-1]);
+          exit(1);
+          break;
+        }
+    }
+
+  // check if there is an element that is not an option
+  if(optind != argc)
+    {
+      fprintf(stderr, "Unrecognized argument: %s\n", argv[optind]);
+      exit(1);
+    }
+
+  // register a segmentation fault handler
+  signal(SIGSEGV, sig_handler);
+  
+  // initialize mutex if required
+  if(sync_opt == 'm') {
+    if(pthread_mutex_init(&mutexlist, NULL) != 0) {
+      fprintf(stderr, "Fail to initialize mutex\n");
+      exit(1);
+    }
+  }
+  
+  // initialize an empty list
+  head.key = NULL;
+  head.next = &head;
+  head.prev = &head;
+
+  // initialize the required number of list elements with random keys(printable ASCII strings)
+  long num_elements = num_threads * num_iter;
+  elements = malloc(sizeof(SortedListElement_t)*num_elements);
+  if(elements == NULL) {
+    fprintf(stderr, "Fail to allocate space for list elements\n");
+    exit(1);
+  }
+  char **keys = malloc(sizeof(char*)*num_elements);
+  if(keys == NULL) {
+    fprintf(stderr, "Fail to allocate space for keys\n");
+    exit(1);
+  }
+  for(int i = 0; i < num_elements; i++) {
+    keys[i] = malloc(sizeof(char)*6);
+    if(keys[i] == NULL) {
+      fprintf(stderr, "Fail to allocate space for a key\n");
+      exit(1);
+    }
+    for(int j = 0; j < 5; j++) {
+      keys[i][j] = rand() % 94 + 33;
+    }
+    keys[i][6] = '\0';
+    elements[i].key = keys[i];
+  }
+
+  long t;
+  int rc;
+  pthread_t* threads = malloc(sizeof(pthread_t)*num_threads);
+  if(threads == NULL) {
+    fprintf(stderr, "Fail to allocate space for thread ID array\n");
+    exit(1);
+  }
+  // notes the starting time for the run
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
+  // start the specified number of threads
+  for(t = 0; t < num_threads; t++) {
+    rc = pthread_create(&threads[t], NULL, thread_func, (void *) t);
+    if (rc){
+      fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
+      exit(1);
+    }
+  }
+  
+  // wait for all threads to complete
+  for(t = 0; t < num_threads; t++) {
+    rc = pthread_join(threads[t], NULL);
+    if (rc) {
+      fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
+      exit(1);
+    }
+  }
+
+  // note the ending time for the run
+  clock_gettime(CLOCK_MONOTONIC, &end);
+
+  // checks the length of the list to confirm it is zero
+  if(SortedList_length(&head) != 0) {
+    fprintf(stderr, "Final list length is not zero\n");
+    exit(2);
+  }
+
+  // prints to stdout a comma-separated-value (CSV) record
+  fprintf(stdout, "list-");
+  if(opt_yield & INSERT_YIELD)
+    fprintf(stdout, "i");
+  if(opt_yield & DELETE_YIELD)
+    fprintf(stdout, "d");
+  if(opt_yield & LOOKUP_YIELD)
+    fprintf(stdout, "l");
+  if(opt_yield == 0)
+    fprintf(stdout, "none");
+  if(sync_opt == 'n')
+    fprintf(stdout, "-none,");
+  if(sync_opt == 's')
+    fprintf(stdout, "-s,");
+  if(sync_opt == 'm')
+    fprintf(stdout, "-m,");
+  long operations = num_threads*num_iter*3;
+  long total_time = (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
+  fprintf(stdout, "%d,%d,1,%ld,%ld,%ld\n", num_threads, num_iter, operations, total_time, total_time/operations);
+
+  // cleaning up
+  if(sync_opt == 'm') {
+    if(pthread_mutex_destroy(&mutexlist) != 0) {
+      fprintf(stderr, "Fail to destroy mutex\n");
+      exit(1);
+    }
+  }
+  free(elements);
+  for(int i = 0; i < num_elements; i++) {
+    free(keys[i]);
+  }
+  free(keys);
+  exit(0);
+}
+
