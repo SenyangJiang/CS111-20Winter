@@ -1,7 +1,3 @@
-// NAME: Senyang Jiang
-// EMAIL: senyangjiang@yahoo.com
-// ID: 505111806
-
 #include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
