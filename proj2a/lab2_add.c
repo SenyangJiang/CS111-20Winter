@@ -1,3 +1,7 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -104,7 +108,7 @@ int main(int argc, char **argv)
 	  sync_flag = 1;
 	  sync_opt = optarg[0];
 	  if(sync_opt != 'm' && sync_opt != 's' && sync_opt != 'c') {
-	    fprintf(stderr, "invalid sync option");
+	    fprintf(stderr, "invalid sync option\n");
 	    exit(1);
 	  }
 	  break;
@@ -128,18 +132,24 @@ int main(int argc, char **argv)
 
   // initialize mutex if required
   if(sync_flag & (sync_opt == 'm')) {
-    pthread_mutex_init(&mutexadd, NULL);
+    if(pthread_mutex_init(&mutexadd, NULL) != 0) {
+      fprintf(stderr, "Fail to initialize mutex\n");
+      exit(1);
+    }
   }
 
   // note the starting time for the run
-  struct timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  long start_time = ts.tv_nsec;
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
   
   // create threads
   int t;
   int rc;
   pthread_t* threads = malloc(sizeof(pthread_t)*num_threads);
+  if(threads == NULL) {
+    fprintf(stderr, "Fail to allocate space for thread ID array\n");
+    exit(1);
+  }
   for(t = 0; t < num_threads; t++) {
     rc = pthread_create(&threads[t], NULL, add_wrapper, NULL);
     if (rc){
@@ -157,11 +167,10 @@ int main(int argc, char **argv)
   }
   
   // note the ending time for the run
-  clock_gettime(CLOCK_REALTIME, &ts);
-  long end_time = ts.tv_nsec;
+  clock_gettime(CLOCK_MONOTONIC, &end);
 
   // prints to stdout a comma-separated-value (CSV) record
-  long total_time = end_time-start_time;
+  long total_time = (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
   long operations = num_threads*num_iter*2;
   if(opt_yield) {
     fprintf(stdout, "add-yield");
@@ -180,7 +189,10 @@ int main(int argc, char **argv)
 
   // cleaning up and exit
   if(sync_flag & (sync_opt == 'm')) {
-    pthread_mutex_destroy(&mutexadd);
+    if(pthread_mutex_destroy(&mutexadd)) {
+      fprintf(stderr, "Fail to destory mutex\n");
+      exit(1);
+    }
   }
   free(threads);
   exit(0);

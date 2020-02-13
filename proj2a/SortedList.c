@@ -1,3 +1,7 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include "SortedList.h"
 #include <sched.h>
 #include <string.h>

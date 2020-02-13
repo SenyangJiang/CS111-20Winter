@@ -1,3 +1,7 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include <unistd.h>
 #include <getopt.h>
 #include "SortedList.h"
@@ -120,6 +124,7 @@ int main(int argc, char **argv)
 	case 's':
 	  sync_opt = optarg[0];
 	  if(sync_opt != 'm' && sync_opt != 's') {
+	    fprintf(stderr, "invalid sync option\n");
 	    exit(1);
 	  }
 	  break;
@@ -132,8 +137,10 @@ int main(int argc, char **argv)
 	      opt_yield |= DELETE_YIELD;
 	    else if(optarg[i] == 'l')
 	      opt_yield |= LOOKUP_YIELD;
-	    else
+	    else {
+	      fprintf(stderr, "invalid yield option\n");
 	      exit(1);
+	    }
 	  }
           break;
         case 't':
@@ -165,7 +172,10 @@ int main(int argc, char **argv)
   
   // initialize mutex if required
   if(sync_opt == 'm') {
-    pthread_mutex_init(&mutexlist, NULL);
+    if(pthread_mutex_init(&mutexlist, NULL) != 0) {
+      fprintf(stderr, "Fail to initialize mutex\n");
+      exit(1);
+    }
   }
   
   // initialize an empty list
@@ -176,9 +186,21 @@ int main(int argc, char **argv)
   // initialize the required number of list elements with random keys(printable ASCII strings)
   long num_elements = num_threads * num_iter;
   elements = malloc(sizeof(SortedListElement_t)*num_elements);
+  if(elements == NULL) {
+    fprintf(stderr, "Fail to allocate space for list elements\n");
+    exit(1);
+  }
   char **keys = malloc(sizeof(char*)*num_elements);
+  if(keys == NULL) {
+    fprintf(stderr, "Fail to allocate space for keys\n");
+    exit(1);
+  }
   for(int i = 0; i < num_elements; i++) {
     keys[i] = malloc(sizeof(char)*6);
+    if(keys[i] == NULL) {
+      fprintf(stderr, "Fail to allocate space for a key\n");
+      exit(1);
+    }
     for(int j = 0; j < 5; j++) {
       keys[i][j] = rand() % 94 + 33;
     }
@@ -189,11 +211,13 @@ int main(int argc, char **argv)
   long t;
   int rc;
   pthread_t* threads = malloc(sizeof(pthread_t)*num_threads);
-
+  if(threads == NULL) {
+    fprintf(stderr, "Fail to allocate space for thread ID array\n");
+    exit(1);
+  }
   // notes the starting time for the run
-  struct timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  long start_time = ts.tv_nsec;
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
 
   // start the specified number of threads
   for(t = 0; t < num_threads; t++) {
@@ -214,8 +238,7 @@ int main(int argc, char **argv)
   }
 
   // note the ending time for the run
-  clock_gettime(CLOCK_REALTIME, &ts);
-  long end_time = ts.tv_nsec;
+  clock_gettime(CLOCK_MONOTONIC, &end);
 
   // checks the length of the list to confirm it is zero
   if(SortedList_length(&head) != 0) {
@@ -240,12 +263,15 @@ int main(int argc, char **argv)
   if(sync_opt == 'm')
     fprintf(stdout, "-m,");
   long operations = num_threads*num_iter*3;
-  long total_time = end_time - start_time;
+  long total_time = (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
   fprintf(stdout, "%d,%d,1,%ld,%ld,%ld\n", num_threads, num_iter, operations, total_time, total_time/operations);
 
   // cleaning up
   if(sync_opt == 'm') {
-    pthread_mutex_destroy(&mutexlist);
+    if(pthread_mutex_destroy(&mutexlist) != 0) {
+      fprintf(stderr, "Fail to destroy mutex\n");
+      exit(1);
+    }
   }
   free(elements);
   for(int i = 0; i < num_elements; i++) {
