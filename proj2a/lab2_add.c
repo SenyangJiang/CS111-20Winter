@@ -1,3 +1,7 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -134,11 +138,6 @@ int main(int argc, char **argv)
     }
   }
 
-  // note the starting time for the run
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start);
-  
-  // create threads
   int t;
   int rc;
   pthread_t* threads = malloc(sizeof(pthread_t)*num_threads);
@@ -146,6 +145,12 @@ int main(int argc, char **argv)
     fprintf(stderr, "Fail to allocate space for thread ID array\n");
     exit(1);
   }
+  
+  // note the starting time for the run
+  struct timespec start, end;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  
+  // create threads
   for(t = 0; t < num_threads; t++) {
     rc = pthread_create(&threads[t], NULL, add_wrapper, NULL);
     if (rc){

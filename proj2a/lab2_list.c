@@ -1,3 +1,7 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include <unistd.h>
 #include <getopt.h>
 #include "SortedList.h"
@@ -200,7 +204,7 @@ int main(int argc, char **argv)
     for(int j = 0; j < 5; j++) {
       keys[i][j] = rand() % 94 + 33;
     }
-    keys[i][6] = '\0';
+    keys[i][5] = '\0';
     elements[i].key = keys[i];
   }
 

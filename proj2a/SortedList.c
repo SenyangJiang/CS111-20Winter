@@ -1,8 +1,14 @@
+// NAME: Senyang Jiang
+// EMAIL: senyangjiang@yahoo.com
+// ID: 505111806
+
 #include "SortedList.h"
 #include <sched.h>
 #include <string.h>
 void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
   if(list == NULL || element == NULL)
+    return;
+  if(list->key != NULL)
     return;
   
   SortedListElement_t *curr = list;
@@ -21,7 +27,7 @@ void SortedList_insert(SortedList_t *list, SortedListElement_t *element) {
 }
 
 int SortedList_delete(SortedListElement_t *element) {
-  if(element == NULL)
+  if(element == NULL || element->key == NULL)
     return 1;
   if((element->next->prev != element) || (element->prev->next != element)) {
     return 1;
@@ -36,7 +42,7 @@ int SortedList_delete(SortedListElement_t *element) {
 }
 
 SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
-  if(list == NULL)
+  if(list == NULL || list->key != NULL)
     return NULL;
   
   SortedListElement_t *curr = list->next;
@@ -53,7 +59,7 @@ SortedListElement_t *SortedList_lookup(SortedList_t *list, const char *key) {
 }
 
 int SortedList_length(SortedList_t *list) {
-  if(list == NULL) {
+  if(list == NULL || list->key != NULL) {
     return -1;
   }
   
@@ -68,6 +74,6 @@ int SortedList_length(SortedList_t *list) {
       sched_yield();
     
     curr = curr->next;
-  } while(curr->next->key != NULL);
+  } while(curr->key != NULL);
   return len-1;
 }

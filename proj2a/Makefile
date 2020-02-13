@@ -1,3 +1,7 @@
+#NAME: Senyang Jiang
+#EMAIL: senyangjiang@yahoo.com
+#ID: 505111806
+
 ID=505111806
 LAB=lab2a
 OUTPUT = lab2_add.csv lab2_list.csv
@@ -76,6 +80,22 @@ tests: build
 	@./lab2_add --threads=4 --iterations=10000 >> lab2_add.csv
 	@./lab2_add --threads=4 --iterations=100000 >> lab2_add.csv
 	@./lab2_add --threads=4 --iterations=1000000 >> lab2_add.csv
+
+	@./lab2_add --threads=1 --iterations=100 --yield >> lab2_add.csv
+	@./lab2_add --threads=1 --iterations=1000 --yield >> lab2_add.csv
+	@./lab2_add --threads=1 --iterations=10000 --yield >> lab2_add.csv
+	@./lab2_add --threads=1 --iterations=100000 --yield >> lab2_add.csv
+	@./lab2_add --threads=1 --iterations=1000000 --yield >> lab2_add.csv
+	@./lab2_add --threads=2 --iterations=100 --yield >> lab2_add.csv
+	@./lab2_add --threads=2 --iterations=1000 --yield >> lab2_add.csv
+	@./lab2_add --threads=2 --iterations=10000 --yield >> lab2_add.csv
+	@./lab2_add --threads=2 --iterations=100000 --yield >> lab2_add.csv
+	@./lab2_add --threads=2 --iterations=1000000 --yield >> lab2_add.csv
+	@./lab2_add --threads=4 --iterations=100 --yield >> lab2_add.csv
+	@./lab2_add --threads=4 --iterations=1000 --yield >> lab2_add.csv
+	@./lab2_add --threads=4 --iterations=10000 --yield >> lab2_add.csv
+	@./lab2_add --threads=4 --iterations=100000 --yield >> lab2_add.csv
+	@./lab2_add --threads=4 --iterations=1000000 --yield >> lab2_add.csv
 #confirm that synchronization eliminate race conditions
 	@./lab2_add --threads=2 --iterations=10000 --yield --sync=m >> lab2_add.csv
 	@./lab2_add --threads=4 --iterations=10000 --yield --sync=m >> lab2_add.csv
