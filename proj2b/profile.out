@@ -1,0 +1,180 @@
+ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter/proj2b/lab2_list.c
+  4528   4594 Total samples (flat / cumulative)
+     .      .   25: {
+     .      .   26:   fprintf(stderr , "Segmentation Fault! Signal Number:%d\n", signo);
+     .      .   27:   exit(2);
+     .      .   28: }
+     .      .   29: 
+---
+     .      .   30: void *thread_func(void *thread_id) {
+     .      .   31:   long tid = (long)thread_id;
+     .      .   32:   for(int i = tid*num_iter; i < (tid+1)*num_iter; i++) {
+     .      .   33:     if(sync_opt == 'm') {
+     .      .   34:       pthread_mutex_lock(&mutexlist);
+     .      .   35:       SortedList_insert(&head, &elements[i]);
+     .      .   36:       pthread_mutex_unlock (&mutexlist);
+     .      .   37:     }
+     .      .   38:     else if(sync_opt == 's') {
+  1824   1824   39:       while (__sync_lock_test_and_set(&lock, 1));
+     .     10   40:       SortedList_insert(&head, &elements[i]);
+     .      .   41:       __sync_lock_release(&lock);
+     .      .   42:     }
+     .      .   43:     else{
+     .      .   44:       SortedList_insert(&head, &elements[i]);
+     .      .   45:     }
+     .      .   46:   }
+     .      .   47:   
+     .      .   48:   int len;
+     .      .   49:   if(sync_opt == 'm') {
+     .      .   50:     pthread_mutex_lock(&mutexlist);
+     .      .   51:     len = SortedList_length(&head);
+     .      .   52:     pthread_mutex_unlock (&mutexlist);
+     .      .   53:   }
+     .      .   54:   else if(sync_opt == 's') {
+     3      3   55:     while (__sync_lock_test_and_set(&lock, 1));
+     .      .   56:     len = SortedList_length(&head);
+     .      .   57:     __sync_lock_release(&lock);
+     .      .   58:   }
+     .      .   59:   else{
+     .      .   60:     len = SortedList_length(&head);
+     .      .   61:   }
+     .      .   62: 
+     .      .   63:   if(len == -1) {
+     .      .   64:     fprintf(stderr, "Failure in finding list length\n");
+     .      .   65:     exit(2);
+     .      .   66:   }
+     .      .   67:   for(int i = tid*num_iter; i < (tid+1)*num_iter; i++) {
+     .      .   68:     SortedListElement_t *e;
+     .      .   69:     if(sync_opt == 'm') {
+     .      .   70:       pthread_mutex_lock(&mutexlist);
+     .      .   71:       e = SortedList_lookup(&head, elements[i].key);
+     .      .   72:       pthread_mutex_unlock (&mutexlist);
+     .      .   73:     }
+     .      .   74:     else if(sync_opt == 's') {
+  1156   1156   75:       while (__sync_lock_test_and_set(&lock, 1));
+     .     56   76:       e = SortedList_lookup(&head, elements[i].key);
+     .      .   77:       __sync_lock_release(&lock);
+     .      .   78:     }
+     .      .   79:     else{
+     .      .   80:       e = SortedList_lookup(&head, elements[i].key);
+     .      .   81:     }
+     .      .   82:     if(e == NULL) {
+     .      .   83:       fprintf(stderr, "Failure in looking up list element\n");
+     .      .   84:       exit(2);
+     .      .   85:     }
+     .      .   86:     int rc;
+     .      .   87:     if(sync_opt == 'm') {
+     .      .   88:       pthread_mutex_lock(&mutexlist);
+     .      .   89:       rc = SortedList_delete(e);
+     .      .   90:       pthread_mutex_unlock (&mutexlist);
+     .      .   91:     }
+     .      .   92:     else if(sync_opt == 's') {
+  1545   1545   93:       while (__sync_lock_test_and_set(&lock, 1));
+     .      .   94:       rc = SortedList_delete(e);
+     .      .   95:       __sync_lock_release(&lock);
+     .      .   96:     }
+     .      .   97:     else{
+     .      .   98:       rc = SortedList_delete(e);
+     .      .   99:     }
+     .      .  100:     if(rc == 1) {
+     .      .  101:       fprintf(stderr, "Failure in deleting list element\n");
+     .      .  102:       exit(2);
+     .      .  103:     }
+     .      .  104:   }
+     .      .  105:   pthread_exit(NULL);
+---
+     .      .  106: }
+     .      .  107: int main(int argc, char **argv)
+     .      .  108: {
+     .      .  109:   int opt;
+     .      .  110:   struct option long_options[] = {{"threads", required_argument, NULL, 't'},
+ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter/proj2b/lab2_list.c
+  4528   4594 Total samples (flat / cumulative)
+     .      .   25: {
+     .      .   26:   fprintf(stderr , "Segmentation Fault! Signal Number:%d\n", signo);
+     .      .   27:   exit(2);
+     .      .   28: }
+     .      .   29: 
+---
+     .      .   30: void *thread_func(void *thread_id) {
+     .      .   31:   long tid = (long)thread_id;
+     .      .   32:   for(int i = tid*num_iter; i < (tid+1)*num_iter; i++) {
+     .      .   33:     if(sync_opt == 'm') {
+     .      .   34:       pthread_mutex_lock(&mutexlist);
+     .      .   35:       SortedList_insert(&head, &elements[i]);
+     .      .   36:       pthread_mutex_unlock (&mutexlist);
+     .      .   37:     }
+     .      .   38:     else if(sync_opt == 's') {
+  1824   1824   39:       while (__sync_lock_test_and_set(&lock, 1));
+     .     10   40:       SortedList_insert(&head, &elements[i]);
+     .      .   41:       __sync_lock_release(&lock);
+     .      .   42:     }
+     .      .   43:     else{
+     .      .   44:       SortedList_insert(&head, &elements[i]);
+     .      .   45:     }
+     .      .   46:   }
+     .      .   47:   
+     .      .   48:   int len;
+     .      .   49:   if(sync_opt == 'm') {
+     .      .   50:     pthread_mutex_lock(&mutexlist);
+     .      .   51:     len = SortedList_length(&head);
+     .      .   52:     pthread_mutex_unlock (&mutexlist);
+     .      .   53:   }
+     .      .   54:   else if(sync_opt == 's') {
+     3      3   55:     while (__sync_lock_test_and_set(&lock, 1));
+     .      .   56:     len = SortedList_length(&head);
+     .      .   57:     __sync_lock_release(&lock);
+     .      .   58:   }
+     .      .   59:   else{
+     .      .   60:     len = SortedList_length(&head);
+     .      .   61:   }
+     .      .   62: 
+     .      .   63:   if(len == -1) {
+     .      .   64:     fprintf(stderr, "Failure in finding list length\n");
+     .      .   65:     exit(2);
+     .      .   66:   }
+     .      .   67:   for(int i = tid*num_iter; i < (tid+1)*num_iter; i++) {
+     .      .   68:     SortedListElement_t *e;
+     .      .   69:     if(sync_opt == 'm') {
+     .      .   70:       pthread_mutex_lock(&mutexlist);
+     .      .   71:       e = SortedList_lookup(&head, elements[i].key);
+     .      .   72:       pthread_mutex_unlock (&mutexlist);
+     .      .   73:     }
+     .      .   74:     else if(sync_opt == 's') {
+  1156   1156   75:       while (__sync_lock_test_and_set(&lock, 1));
+     .     56   76:       e = SortedList_lookup(&head, elements[i].key);
+     .      .   77:       __sync_lock_release(&lock);
+     .      .   78:     }
+     .      .   79:     else{
+     .      .   80:       e = SortedList_lookup(&head, elements[i].key);
+     .      .   81:     }
+     .      .   82:     if(e == NULL) {
+     .      .   83:       fprintf(stderr, "Failure in looking up list element\n");
+     .      .   84:       exit(2);
+     .      .   85:     }
+     .      .   86:     int rc;
+     .      .   87:     if(sync_opt == 'm') {
+     .      .   88:       pthread_mutex_lock(&mutexlist);
+     .      .   89:       rc = SortedList_delete(e);
+     .      .   90:       pthread_mutex_unlock (&mutexlist);
+     .      .   91:     }
+     .      .   92:     else if(sync_opt == 's') {
+  1545   1545   93:       while (__sync_lock_test_and_set(&lock, 1));
+     .      .   94:       rc = SortedList_delete(e);
+     .      .   95:       __sync_lock_release(&lock);
+     .      .   96:     }
+     .      .   97:     else{
+     .      .   98:       rc = SortedList_delete(e);
+     .      .   99:     }
+     .      .  100:     if(rc == 1) {
+     .      .  101:       fprintf(stderr, "Failure in deleting list element\n");
+     .      .  102:       exit(2);
+     .      .  103:     }
+     .      .  104:   }
+     .      .  105:   pthread_exit(NULL);
+---
+     .      .  106: }
+     .      .  107: int main(int argc, char **argv)
+     .      .  108: {
+     .      .  109:   int opt;
+     .      .  110:   struct option long_options[] = {{"threads", required_argument, NULL, 't'},
