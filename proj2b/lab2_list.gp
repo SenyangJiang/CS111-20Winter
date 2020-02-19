@@ -72,11 +72,11 @@ set output 'lab2b_3.png'
 
 plot \
      "< grep -E 'list-id-none,.+,.+,4,' lab2b_list.csv" using ($2):($3) \
-        title 'no synchronization' with points lc rgb 'red', \
+        title 'no synchronization' with points lc rgb 'blue', \
      "< grep -E 'list-id-m,.+,.+,4,' lab2b_list.csv" using ($2):($3) \
-        title 'mutex' with points lc rgb 'green', \
+        title 'mutex' with points ps 1.3 lc rgb 'red', \
      "< grep -E 'list-id-s,.+,.+,4,' lab2b_list.csv" using ($2):($3) \
-        title 'spin-lock' with points lc rgb 'violet'
+        title 'spin-lock' with points lc rgb 'green'
 
 set title "aggregated throughput vs. the number of threads (sync=m)"
 set xlabel "Threads"

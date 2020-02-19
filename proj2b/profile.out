@@ -1,24 +1,32 @@
-Total: 1041 samples
-     878  84.3%  84.3%     1041 100.0% thread_func
-      39   3.7%  88.1%       39   3.7% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:200
-      22   2.1%  90.2%       22   2.1% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1721
-      18   1.7%  91.9%       96   9.2% SortedList_insert
-      17   1.6%  93.6%       17   1.6% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:165
-      10   1.0%  94.5%       10   1.0% _init
-       9   0.9%  95.4%        9   0.9% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1720
-       8   0.8%  96.2%        8   0.8% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1729
-       8   0.8%  96.9%       67   6.4% SortedList_lookup
-       7   0.7%  97.6%        7   0.7% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:205
-       7   0.7%  98.3%        7   0.7% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1730
-       5   0.5%  98.8%        5   0.5% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:204
-       4   0.4%  99.1%        4   0.4% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:160
-       4   0.4%  99.5%        4   0.4% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:203
-       3   0.3%  99.8%        3   0.3% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:130
-       2   0.2% 100.0%        2   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:202
-       0   0.0% 100.0%     1041 100.0% ?? /usr/src/debug////////glibc-2.17-c758a686/misc/../sysdeps/unix/sysv/linux/x86_64/clone.S:111
-       0   0.0% 100.0%     1041 100.0% start_thread
+Total: 1239 samples
+    1132  91.4%  91.4%     1238  99.9% thread_func
+      17   1.4%  92.7%       17   1.4% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:200
+      16   1.3%  94.0%       16   1.3% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:165
+      14   1.1%  95.2%       52   4.2% SortedList_insert
+      14   1.1%  96.3%       53   4.3% SortedList_lookup
+      12   1.0%  97.3%       12   1.0% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1721
+       5   0.4%  97.7%        5   0.4% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:205
+       5   0.4%  98.1%        5   0.4% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1730
+       4   0.3%  98.4%        4   0.3% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:204
+       3   0.2%  98.6%        3   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:130
+       3   0.2%  98.9%        3   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1720
+       3   0.2%  99.1%        3   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1729
+       2   0.2%  99.3%        2   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:160
+       2   0.2%  99.4%        2   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:202
+       2   0.2%  99.6%        2   0.2% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:1714
+       2   0.2%  99.8%        2   0.2% _init
+       1   0.1%  99.8%        1   0.1% ?? /usr/src/debug////////glibc-2.17-c758a686/misc/../sysdeps/unix/syscall-template.S:81
+       1   0.1%  99.9%        1   0.1% ?? /usr/src/debug////////glibc-2.17-c758a686/string/../sysdeps/x86_64/multiarch/strcmp-sse42.S:203
+       1   0.1% 100.0%        1   0.1% 0x00007ffce44837a8
+       0   0.0% 100.0%     1238  99.9% ?? /usr/src/debug////////glibc-2.17-c758a686/misc/../sysdeps/unix/sysv/linux/x86_64/clone.S:111
+       0   0.0% 100.0%        1   0.1% __GI___clock_gettime
+       0   0.0% 100.0%        1   0.1% __libc_start_main
+       0   0.0% 100.0%        1   0.1% _start
+       0   0.0% 100.0%        1   0.1% allocate_stack
+       0   0.0% 100.0%        1   0.1% main
+       0   0.0% 100.0%     1238  99.9% start_thread
 ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter/proj2b/lab2_list.c
-   878   1041 Total samples (flat / cumulative)
+  1132   1238 Total samples (flat / cumulative)
      .      .   43:         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
      .      .   44: 
      .      .   45:     return hash;
@@ -43,10 +51,10 @@ ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter
      .      .   63:     }
      .      .   64:     else if(sync_opt == 's') {
      .      .   65:       clock_gettime(CLOCK_MONOTONIC, &start);
-   435    435   66:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
+   551    551   66:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
      .      .   67:       clock_gettime(CLOCK_MONOTONIC, &end);
      .      .   68:       total_time += (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
-     .     96   69:       SortedList_insert(&(sublists[list_id].head), &elements[i]);
+     .     52   69:       SortedList_insert(&(sublists[list_id].head), &elements[i]);
      .      .   70:       __sync_lock_release(&(sublists[list_id].lock));
      .      .   71:     }
      .      .   72:     else{
@@ -107,10 +115,10 @@ ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter
      .      .  127:     }
      .      .  128:     else if(sync_opt == 's') {
      .      .  129:       clock_gettime(CLOCK_MONOTONIC, &start);
-   443    443  130:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
-     .      .  131:       clock_gettime(CLOCK_MONOTONIC, &end);
+   581    581  130:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
+     .      1  131:       clock_gettime(CLOCK_MONOTONIC, &end);
      .      .  132:       total_time += (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
-     .     67  133:       e = SortedList_lookup(&(sublists[list_id].head), elements[i].key);
+     .     53  133:       e = SortedList_lookup(&(sublists[list_id].head), elements[i].key);
      .      .  134:       if(e == NULL) {
      .      .  135: 	fprintf(stderr, "Failure in looking up list element\n");
      .      .  136: 	exit(2);
@@ -143,7 +151,7 @@ ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter
      .      .  162:   int opt;
      .      .  163:   struct option long_options[] = {{"threads", required_argument, NULL, 't'},
 ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter/proj2b/lab2_list.c
-   878   1041 Total samples (flat / cumulative)
+  1132   1238 Total samples (flat / cumulative)
      .      .   43:         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
      .      .   44: 
      .      .   45:     return hash;
@@ -168,10 +176,10 @@ ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter
      .      .   63:     }
      .      .   64:     else if(sync_opt == 's') {
      .      .   65:       clock_gettime(CLOCK_MONOTONIC, &start);
-   435    435   66:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
+   551    551   66:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
      .      .   67:       clock_gettime(CLOCK_MONOTONIC, &end);
      .      .   68:       total_time += (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
-     .     96   69:       SortedList_insert(&(sublists[list_id].head), &elements[i]);
+     .     52   69:       SortedList_insert(&(sublists[list_id].head), &elements[i]);
      .      .   70:       __sync_lock_release(&(sublists[list_id].lock));
      .      .   71:     }
      .      .   72:     else{
@@ -232,10 +240,10 @@ ROUTINE ====================== thread_func in /u/cs/ugrad/senyang/CS111-20Winter
      .      .  127:     }
      .      .  128:     else if(sync_opt == 's') {
      .      .  129:       clock_gettime(CLOCK_MONOTONIC, &start);
-   443    443  130:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
-     .      .  131:       clock_gettime(CLOCK_MONOTONIC, &end);
+   581    581  130:       while (__sync_lock_test_and_set(&(sublists[list_id].lock), 1));
+     .      1  131:       clock_gettime(CLOCK_MONOTONIC, &end);
      .      .  132:       total_time += (end.tv_sec - start.tv_sec)*1000000000 + (end.tv_nsec - start.tv_nsec);
-     .     67  133:       e = SortedList_lookup(&(sublists[list_id].head), elements[i].key);
+     .     53  133:       e = SortedList_lookup(&(sublists[list_id].head), elements[i].key);
      .      .  134:       if(e == NULL) {
      .      .  135: 	fprintf(stderr, "Failure in looking up list element\n");
      .      .  136: 	exit(2);
