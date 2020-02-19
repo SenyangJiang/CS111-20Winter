@@ -4,7 +4,7 @@
 
 ID=505111806
 LAB=lab2b
-OUTPUT = lab2b_list.csv
+OUTPUT = lab2b_list.csv profile.out
 GRAPHS = lab2b_1.png lab2b_2.png lab2b_3.png lab2b_4.png lab2b_5.png
 SCRIPTS = lab2_list.gp
 TARBALL=$(LAB)-$(ID).tar.gz
@@ -135,7 +135,7 @@ tests: build
 profile: build
 	@env CPUPROFILE=list.prof ./lab2_list --threads=12 --iterations=1000 --sync=s
 	@pprof ./lab2_list list.prof > profile.out
-	@pprof --list=thread_func ./lab2_list list.prof > profile.out
+	@pprof --list=thread_func ./lab2_list list.prof >> profile.out
 
 graphs: tests
 	@chmod +x ./lab2_list.gp
@@ -145,4 +145,4 @@ dist: graphs
 	@tar -czf $(TARBALL) README Makefile *.c *.h $(OUTPUT) $(GRAPHS) $(SCRIPTS)
 
 clean:
-	@rm -f lab2_list lab2b-505111806.tar.gz
+	@rm -f lab2_list lab2b-505111806.tar.gz list.prof
