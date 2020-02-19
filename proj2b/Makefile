@@ -136,13 +136,14 @@ profile: build
 	@env CPUPROFILE=list.prof ./lab2_list --threads=12 --iterations=1000 --sync=s
 	@pprof ./lab2_list list.prof > profile.out
 	@pprof --list=thread_func ./lab2_list list.prof >> profile.out
+	@rm -f list.prof
 
 graphs: tests
 	@chmod +x ./lab2_list.gp
 	@./lab2_list.gp
 
-dist: graphs
+dist: graphs profile
 	@tar -czf $(TARBALL) README Makefile *.c *.h $(OUTPUT) $(GRAPHS) $(SCRIPTS)
 
 clean:
-	@rm -f lab2_list lab2b-505111806.tar.gz list.prof
+	@rm -f lab2_list lab2b-505111806.tar.gz
