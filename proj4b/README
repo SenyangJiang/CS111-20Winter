@@ -5,7 +5,7 @@ ID: 505111806
 Included files:
 	 1.lab4b.c: source file that implements specified functionalities of this project.
 	 2.Makefile: this makefile supports four targets:
-	 	     (default): used to compile the source code to a program named lab0
+	 	     (default): used to compile the source code to a program named lab4b
 		     check: execute an automated smoke-test to see if it runs and can talk to its sensors
 		     clean: delete all files created by Makefile
 		     dist: build the distribution tarball
