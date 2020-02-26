@@ -56,6 +56,9 @@ void command_interpret(char* command) {
   }
   else if(period_command != NULL) {
     period_command += 7;
+    if(strlen(period_command) == 0) {
+      return;
+    }
     int i;
     for(i = 0; period_command[i] != '\0'; i++) {
       if(!isdigit(period_command[i]))
