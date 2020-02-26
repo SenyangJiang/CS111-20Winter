@@ -1,0 +1,27 @@
+NAME: Senyang Jiang
+EMAIL: senyangjiang@yahoo.com
+ID: 505111806
+
+Included files:
+	 1.lab4b.c: source file that implements specified functionalities of this project.
+	 2.Makefile: this makefile supports four targets:
+	 	     (default): used to compile the source code to a program named lab0
+		     check: execute an automated smoke-test to see if it runs and can talk to its sensors
+		     clean: delete all files created by Makefile
+		     dist: build the distribution tarball
+	3.README: descriptions of each of the included files && comments on the submission
+
+Smoke-test in the check target:
+it provides the following input for the program:
+SCALE=C
+PERIOD=2
+STOP
+START
+LOG helloworld
+OFF
+
+The test checks the following things:
+1.the program runs successfully
+2.the timestamp and temperature are recorded
+3.each of the command is recorded
+4.the final SHUTDOWN is recorded
