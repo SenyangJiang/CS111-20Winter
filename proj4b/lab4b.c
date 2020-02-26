@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <math.h>
 #include <poll.h>
+#include <ctype.h>
 
 const int B = 4275;
 const int R0 = 100000;
@@ -37,7 +38,7 @@ void shutdown() {
   exit(0);
 }
 
-void command_interpret(const char* command) {
+void command_interpret(char* command) {
   char* period_command = strstr(command, "PERIOD=");
   char* log_command = strstr(command, "LOG");
 
@@ -45,26 +46,33 @@ void command_interpret(const char* command) {
     fprintf(logfile, command);
   }
   
-  if(strcmp(command, "SCALE=F\n") == 0) {
+  int len = strlen(command);
+  command[len-1] = '\0'; // change '\n' to '\0' (easier to interpret)
+  if(strcmp(command, "SCALE=F") == 0) {
     scale = 'F';
   }
-  else if(strcmp(command, "SCALE=C\n") == 0) {
+  else if(strcmp(command, "SCALE=C") == 0) {
     scale = 'C';
   }
   else if(period_command != NULL) {
     period_command += 7;
+    int i;
+    for(i = 0; period_command[i] != '\0'; i++) {
+      if(!isdigit(period_command[i]))
+	return;
+    }
     period = atoi(period_command);
   }
-  else if(strcmp(command, "STOP\n") == 0) {
+  else if(strcmp(command, "STOP") == 0) {
     report_flag = 0;
   }
-  else if(strcmp(command, "START\n") == 0) {
+  else if(strcmp(command, "START") == 0) {
     report_flag = 1;
   }
   else if(log_command != NULL) {
     ;
   }
-  else if(strcmp(command, "OFF\n") == 0) {
+  else if(strcmp(command, "OFF") == 0) {
     shutdown();
   }
 
@@ -168,8 +176,8 @@ int main(int argc, char **argv)
   // main loop
   while(1) {
     curr_sec = time(NULL);
-    if(report_flag && (last_sec == 0 || curr_sec - last_sec >= period)) {
-      // generate report
+    if(last_sec == 0 || curr_sec - last_sec >= period) {
+      // generate report if report_flag is 1
       last_sec = curr_sec;
       int a = mraa_aio_read(temp);
       float R = 1023.0/a-1.0;
@@ -179,12 +187,14 @@ int main(int argc, char **argv)
       if(scale == 'F')
 	temperature = temperature * 1.8 + 32;
 
-      timestamp = localtime(&curr_sec);
-      strftime(time_report, 32, "%H:%M:%S", timestamp);
-    
-      fprintf(stdout, "%s %.1f\n", time_report, temperature);
-      if(log_flag) {
-	fprintf(logfile, "%s %.1f\n", time_report, temperature);
+      if(report_flag) {
+      	timestamp = localtime(&curr_sec);
+      	strftime(time_report, 32, "%H:%M:%S", timestamp);
+
+      	fprintf(stdout, "%s %.1f\n", time_report, temperature);
+      	if(log_flag) {
+	  fprintf(logfile, "%s %.1f\n", time_report, temperature);
+      	}
       }
     }
     

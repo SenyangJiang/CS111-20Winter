@@ -25,3 +25,7 @@ The test checks the following things:
 2.the timestamp and temperature are recorded
 3.each of the command is recorded
 4.the final SHUTDOWN is recorded
+
+RESEARCH:
+How to print time format:
+https://stackoverflow.com/questions/3673226/how-to-print-time-in-format-2009-08-10-181754-811
