@@ -35,6 +35,7 @@ void shutdown() {
   }
   mraa_aio_close(temp);
   mraa_gpio_close(button);
+  fclose(logfile);
   exit(0);
 }
 
