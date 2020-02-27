@@ -32,10 +32,11 @@ void shutdown() {
   fprintf(stdout, "%s SHUTDOWN\n", time_report);
   if(log_flag) {
     fprintf(logfile, "%s SHUTDOWN\n", time_report);
+    fclose(logfile);
+    free(logname);
   }
   mraa_aio_close(temp);
   mraa_gpio_close(button);
-  fclose(logfile);
   exit(0);
 }
 
@@ -101,7 +102,7 @@ int main(int argc, char **argv)
 	  period = atoi(optarg);
 	  break;
 	case 's':
-	  if(strlen(optarg) > 1) {
+	  if(strlen(optarg) != 1) {
 	    fprintf(stderr, "invalid temperature scale\n");
 	    exit(1);
 	  }
