@@ -1,3 +1,7 @@
+//NAME: Senyang Jiang, Max Zhang
+//EMAIL: senyangjiang@yahoo.com, pipi-max@hotmail.com
+//ID: 505111806, 205171726
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,36 +11,51 @@
 #include <fcntl.h>
 #include <time.h>
 #include <string.h>
+#include <signal.h>
 #include "ext2_fs.h"
 
 int fd;
 __u32 block_size;
 
+void sig_handler(int signo)
+{
+  fprintf(stderr , "Corruption detected: Segmentation fault, signal number: %d\n", signo);
+  exit(2);
+}
+
 unsigned long block_address(unsigned long blockNum) {
   return blockNum*block_size;
 }
 
-void read_dir_entry(__u32 group_block, __u32 inode_number, __u32 dir_entry_block) {
+void read_inode_time(time_t t, char* report) {
+  struct tm* time;
+  time = gmtime(&t);
+  strftime(report, 32, "%m/%d/%y %H:%M:%S", time); 
+}
+
+void read_dir_entry(__u32 group_block, __u32 inode_number, __u32 dir_entry_block, __u32 logical_block_offset) {
   __u32 entry_address = block_address(group_block+(dir_entry_block-1));
   __u32 offset_within_dir = 0;
+  __u32 offset_within_block = 0;
   __u32 file_inode = 0;
   __u16 rec_len = 0;
   struct ext2_dir_entry dir_entry;
   while(1){
-    if(offset_within_dir == block_size) {
+    if(offset_within_block == block_size) {
       break;
     }
     pread(fd, &file_inode, 4, entry_address);
     pread(fd, &rec_len, 2, entry_address + 4);
     if(file_inode == 0) {
       entry_address += rec_len;
-      offset_within_dir += rec_len;
+      offset_within_block += rec_len;
       continue;
     }
     pread(fd, &dir_entry, sizeof(dir_entry), entry_address);
+    offset_within_dir = logical_block_offset*block_size+offset_within_block;
     fprintf(stdout, "DIRENT,%u,%u,%u,%hu,%hhu,'%.*s'\n", inode_number, offset_within_dir, file_inode, rec_len, dir_entry.name_len, dir_entry.name_len, dir_entry.name);
     entry_address += rec_len;
-    offset_within_dir += rec_len;
+    offset_within_block += rec_len;
   }
 }
 
@@ -62,7 +81,7 @@ void read_indirect_block(int level, __u32 group_block, __u32 inode_number, __u32
      }
      // read directory entries
      if(level == 1 && type == 'd') {
-       read_dir_entry(group_block, inode_number, referenced_block_entry);
+       read_dir_entry(group_block, inode_number, referenced_block_entry, logical_block_offset);
      }
      
      fprintf(stdout, "INDIRECT,%u,%d,%u,%u,%u\n", inode_number, level, logical_block_offset, indirect_block_entry, referenced_block_entry);
@@ -89,20 +108,21 @@ void read_indirect_block(int level, __u32 group_block, __u32 inode_number, __u32
 int main(int argc, char **argv)
 {
   if(argc < 2) {
-    fprintf(stderr, "file system image not specified");
+    fprintf(stderr, "file system image not specified\n");
     exit(1);
   }
   if(argc > 2) {
-    fprintf(stderr, "too many arguments");
+    fprintf(stderr, "too many arguments\n");
     exit(1);
   }
 
   fd = open(argv[1], O_RDONLY);
   if(fd == -1) {
-    fprintf(stderr, "fail to open file system image");
+    fprintf(stderr, "fail to open file system image\n");
     exit(1);
   }
 
+  signal(SIGSEGV, sig_handler);
   // super block summary
   struct ext2_super_block sb;
   pread(fd, &sb, sizeof(sb), 1024);
@@ -117,9 +137,17 @@ int main(int argc, char **argv)
   fprintf(stdout, "SUPERBLOCK,%u,%u,%u,%hu,%u,%u,%u\n", block_count, inode_count, block_size, inode_size, blocks_per_group, inodes_per_group, first_ino);
 
   struct ext2_group_desc gd;
+  char* bitmap = malloc(block_size);
   __u16 group_number = 0;
   for(; group_number <= block_count/blocks_per_group; group_number++){
     __u32 group_block = first_data_block + group_number*blocks_per_group;
+    __u32 temp_blocks_per_group = blocks_per_group;
+    if(group_number == block_count/blocks_per_group) {
+      temp_blocks_per_group = block_count - group_number * blocks_per_group;
+      if(temp_blocks_per_group == 0) {
+	break;
+      }
+    }
     // group summary
     pread(fd, &gd, sizeof(gd), block_address(group_block+1));
     __u16 free_blocks_count = gd.bg_free_blocks_count;
@@ -127,18 +155,13 @@ int main(int argc, char **argv)
     __u32 block_bitmap_block_id = gd.bg_block_bitmap;
     __u32 inode_bitmap_block_id = gd.bg_inode_bitmap;
     __u32 inode_table_block_id = gd.bg_inode_table;
-    __u32 temp_blocks_per_group = blocks_per_group;
-    if(group_number == block_count/blocks_per_group){
-      temp_blocks_per_group = block_count - group_number * blocks_per_group;
-    }
     fprintf(stdout, "GROUP,%hu,%u,%u,%hu,%hu,%u,%u,%u\n", group_number, temp_blocks_per_group, inodes_per_group, free_blocks_count, free_inodes_count, block_bitmap_block_id, inode_bitmap_block_id, inode_table_block_id);
     // free block entries
-    char* bitmap = malloc(block_size);
     pread(fd, bitmap, block_size, block_address(group_block+(block_bitmap_block_id-1)));
     for(size_t i = 0; i < temp_blocks_per_group/8; i++) {
       for(size_t j = 0; j < 8; j++) {
 	      if(!(bitmap[i] & (1 << j))){
-	        fprintf(stdout, "BFREE,%lu\n", i*8+j);
+	        fprintf(stdout, "BFREE,%lu\n", 1+i*8+j);
 	      }
       }
     }
@@ -159,7 +182,7 @@ int main(int argc, char **argv)
 	else {
 	  // I-node summary
 	  pread(fd, &current_inode, inode_size, block_address(group_block+inode_table_block_id-1) + inode_size * (current_inode_number - 1));
-          __u8 type;
+          char type;
           __u16 file_mode = current_inode.i_mode;
 	  if (current_inode.i_mode == 0 || current_inode.i_links_count == 0) {
 	    continue;
@@ -177,33 +200,24 @@ int main(int argc, char **argv)
           __u16 uid = current_inode.i_uid;
           __u16 gid = current_inode.i_gid;
           __u16 links_count = current_inode.i_links_count;
-          struct tm* change_time;
-	  time_t ctime = current_inode.i_ctime;
-          change_time = localtime(&ctime);
-          struct tm* mod_time;
-	  time_t mtime = current_inode.i_mtime;
-          mod_time = localtime(&mtime);
-          struct tm* acc_time;
-	  time_t atime = current_inode.i_atime;
-          acc_time = localtime(&atime);
+	  fprintf(stdout, "INODE,%u,%c,%o,%hu,%hu,%hu,", global_inode_number, type, mode, uid, gid, links_count);
+	  char change_time_report[32];
+	  char mod_time_report[32];
+	  char access_time_report[32];
+	  read_inode_time(current_inode.i_ctime, change_time_report);
+	  read_inode_time(current_inode.i_mtime, mod_time_report);
+	  read_inode_time(current_inode.i_atime, access_time_report);
+          fprintf(stdout, "%s,%s,%s,", change_time_report, mod_time_report, access_time_report);
           __u32 size = current_inode.i_size;
           __u32 blocks = current_inode.i_blocks;
-	  char time_report[32];
-          fprintf(stdout, "INODE,%u,%c,%o,%hu,%hu,%hu,", current_inode_number, type, mode, uid, gid, links_count);
-	  strftime(time_report, 32, "%m/%d/%y %H:%M:%S", change_time); 
-          fprintf(stdout, "%s,", time_report);
-          strftime(time_report, 32, "%m/%d/%y %H:%M:%S", mod_time); 
-          fprintf(stdout, "%s,", time_report);
-	  strftime(time_report, 32, "%m/%d/%y %H:%M:%S", acc_time); 
-          fprintf(stdout, "%s,", time_report);
           fprintf(stdout, "%u,%u", size, blocks);
 	  if(type == 'f' || type == 'd') {
 	    for(int i = 0; i < 15; i++) {
-	      fprintf(stdout, ",%lu", block_address(group_block+current_inode.i_block[i]));
+	      fprintf(stdout, ",%u", current_inode.i_block[i]);
 	    }
 	  } else if(type == 's' && size >= sizeof(current_inode.i_block)) {
-	    for(size_t i = 0; i < 15; i++){
-              fprintf(stdout, ",%lu", block_address(group_block+current_inode.i_block[i]));
+	    for(int i = 0; i < 15; i++){
+              fprintf(stdout, ",%u", current_inode.i_block[i]);
             }
 	  }
 	  fprintf(stdout, "\n");
@@ -211,7 +225,7 @@ int main(int argc, char **argv)
 	  if(type == 'd'){
             for (int i = 0; i < 12; i++) {
 	      if(current_inode.i_block[i] != 0) {
-		read_dir_entry(group_block, global_inode_number, current_inode.i_block[i]);
+		read_dir_entry(group_block, global_inode_number, current_inode.i_block[i], i);
 	      }
             }
           }
@@ -219,15 +233,15 @@ int main(int argc, char **argv)
 	  if(type == 'f' || type == 'd') {
 	    // single indirect block
 	    if(current_inode.i_block[12] != 0) {
-	      read_indirect_block(1, group_block, current_inode_number, 12, current_inode.i_block[12], type);
+	      read_indirect_block(1, group_block, global_inode_number, 12, current_inode.i_block[12], type);
 	    }
 	    // double indirect block
 	    if(current_inode.i_block[13] != 0) {
-	      read_indirect_block(2, group_block, current_inode_number, 12+256, current_inode.i_block[13], type);
+	      read_indirect_block(2, group_block, global_inode_number, 12+256, current_inode.i_block[13], type);
             }
 	    // triple indirect blocks
 	    if(current_inode.i_block[14] != 0) {
-	      read_indirect_block(3, group_block, current_inode_number, 12+256+256*256, current_inode.i_block[14], type);
+	      read_indirect_block(3, group_block, global_inode_number, 12+256+256*256, current_inode.i_block[14], type);
 	    }
 	  }
 
@@ -236,5 +250,7 @@ int main(int argc, char **argv)
     }
   }
 
+  free(bitmap);
+  close(fd);
   exit(0);
 }
