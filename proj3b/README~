@@ -1,0 +1,15 @@
+NAME: Senyang Jiang, Max Zhang
+EMAIL: senyangjiang@yahoo.com, pipi-max@hotmail.com
+ID: 505111806, 205171726
+
+Research: TA's PPT
+
+Limitations: It uses shebang to run /usr/local/cs/bin/python3,
+so python3 must be there.
+
+Features: As specified by the spec.
+
+Testing methodology:
+All test cases provided by TA on piazza
+under this URL http://web.cs.ucla.edu/classes/cs111/Samples/
+And then the sanity test
