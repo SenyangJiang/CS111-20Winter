@@ -32,7 +32,7 @@ def main():
     try:
         fid =  open(sys.argv[1], 'r')
     except:
-        sys.stderr.write("fail to open file")
+        sys.stderr.write("fail to open file\n")
         exit(1)
 
     csv_reader = csv.reader(fid, delimiter=',')
@@ -90,9 +90,9 @@ def main():
                         block_dict[row[26]].inode_ref_list.append([3, row[1], 12+256+256*256])
         if row[0] == "INDIRECT":
             if row[5] not in block_dict:
-                block_dict[row[5]] = Block(False, [[row[2], row[1], row[3]]])
+                block_dict[row[5]] = Block(False, [[row[2]-1, row[1], row[3]]])
             else:
-                block_dict[row[5]].inode_ref_list.append([row[2], row[1], row[3]])
+                block_dict[row[5]].inode_ref_list.append([row[2]-1, row[1], row[3]])
         if row[0] == "DIRENT":
             if row[3] not in inode_dict:
                 inode_dict[row[3]] = Inode(False, False, 0, [[row[1], row[6]]])
@@ -104,7 +104,7 @@ def main():
         block = block_dict[block_num]
 
         #Invalid block number
-        if block_num < 0 or block_num > total_num_blocks:
+        if block_num < 0 or block_num >= total_num_blocks:
             inconst_flag = True
             for inode_ref in block.inode_ref_list:
                 print("INVALID", end=" ")
@@ -197,7 +197,16 @@ def main():
             if dir_ref[1] == "'.'" and dir_ref[0] != inode_num:
                 inconst_flag = True
                 print("DIRECTORY INODE " + str(dir_ref[0]) + " NAME '.' LINK TO INODE " + str(inode_num) + " SHOULD BE " + str(dir_ref[0]))
-                
+            if dir_ref[1] == "'..'" and not dir_ref[0] == 2:
+                parent_inode_num = dir_ref[0]
+                if parent_inode_num not in inode_dict:
+                    continue
+                parent_inode = inode_dict[parent_inode_num]
+                for parent_dir_ref in parent_inode.dir_ref_list:
+                    if parent_dir_ref[1] != "'.'" and parent_dir_ref[1] != "'..'":
+                        if inode_num != parent_dir_ref[0]:
+                            inconst_flag = True
+                            print("DIRECTORY INODE " + str(parent_inode_num) + " NAME '..' LINK TO INODE " + str(inode_num) + " SHOULD BE " + str(parent_dir_ref[0]))
     if inconst_flag:
         exit(2)
     else:

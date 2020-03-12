@@ -1,0 +1,100 @@
+#!/usr/bin/sh
+
+./lab3b trivial.csv > result
+touch answer
+diff result answer
+
+./lab3b P3B-test_1.csv > result
+echo "INVALID BLOCK 65 IN INODE 13 AT OFFSET 0" > answer
+diff result answer
+
+./lab3b P3B-test_2.csv > result
+echo "INVALID INDIRECT BLOCK 65 IN INODE 13 AT OFFSET 12" > answer
+diff result answer
+
+./lab3b P3B-test_3.csv > result
+echo "INVALID DOUBLE INDIRECT BLOCK 65 IN INODE 13 AT OFFSET 268" > answer
+diff result answer
+
+./lab3b P3B-test_4.csv > result
+echo "INVALID TRIPLE INDIRECT BLOCK 65 IN INODE 13 AT OFFSET 65804" > answer
+diff result answer
+
+./lab3b P3B-test_5.csv > result
+echo "RESERVED BLOCK 3 IN INODE 13 AT OFFSET 0" > answer
+diff result answer
+
+./lab3b P3B-test_6.csv > result
+echo "RESERVED INDIRECT BLOCK 3 IN INODE 13 AT OFFSET 12" > answer
+diff result answer
+
+./lab3b P3B-test_7.csv > result
+echo "RESERVED DOUBLE INDIRECT BLOCK 3 IN INODE 13 AT OFFSET 268" > answer
+diff result answer
+
+./lab3b P3B-test_8.csv > result
+echo "RESERVED TRIPLE INDIRECT BLOCK 3 IN INODE 13 AT OFFSET 65804" > answer
+diff result answer
+
+./lab3b P3B-test_9.csv > result
+echo "UNREFERENCED BLOCK 41" > answer
+diff result answer
+
+./lab3b P3B-test_10.csv > result
+echo "ALLOCATED BLOCK 8 ON FREELIST" > answer
+diff result answer
+
+./lab3b P3B-test_11.csv > result
+echo "DUPLICATE BLOCK 8 IN INODE 2 AT OFFSET 0" > answer
+echo "DUPLICATE BLOCK 8 IN INODE 13 AT OFFSET 0" >> answer
+diff result answer
+
+./lab3b P3B-test_12.csv > result
+echo "DUPLICATE BLOCK 8 IN INODE 2 AT OFFSET 0" > answer
+echo "DUPLICATE INDIRECT BLOCK 8 IN INODE 13 AT OFFSET 12" >> answer
+diff result answer
+
+./lab3b P3B-test_13.csv > result
+echo "DUPLICATE BLOCK 8 IN INODE 2 AT OFFSET 0" > answer
+echo "DUPLICATE DOUBLE INDIRECT BLOCK 8 IN INODE 13 AT OFFSET 268" >> answer
+diff result answer
+
+./lab3b P3B-test_14.csv > result
+echo "DUPLICATE BLOCK 8 IN INODE 2 AT OFFSET 0" > answer
+echo "DUPLICATE TRIPLE INDIRECT BLOCK 8 IN INODE 13 AT OFFSET 65804" >> answer
+diff result answer
+
+./lab3b P3B-test_15.csv > result
+echo "UNALLOCATED INODE 18 NOT ON FREELIST" > answer
+diff result answer
+
+./lab3b P3B-test_16.csv > result
+echo "ALLOCATED INODE 2 ON FREELIST" > answer
+diff result answer
+
+./lab3b P3B-test_17.csv > result
+echo "INODE 18 HAS 0 LINKS BUT LINKCOUNT IS 1" > answer
+diff result answer
+
+./lab3b P3B-test_18.csv > result
+echo "DIRECTORY INODE 2 NAME 'bogusEntry' INVALID INODE 26" > answer
+diff result answer
+
+./lab3b P3B-test_19.csv > result
+echo "DIRECTORY INODE 2 NAME 'nullEntry' UNALLOCATED INODE 18" > answer
+diff result answer
+
+./lab3b P3B-test_20.csv > result
+echo "INODE 2 HAS 4 LINKS BUT LINKCOUNT IS 5" > answer
+diff result answer
+
+./lab3b P3B-test_21.csv > result
+echo "INODE 2 HAS 4 LINKS BUT LINKCOUNT IS 3" > answer
+diff result answer
+
+./lab3b P3B-test_22.csv > result
+echo "DIRECTORY INODE 2 NAME '..' LINK TO INODE 11 SHOULD BE 2" > answer
+diff result answer
+
+rm -f result
+rm -f answer
