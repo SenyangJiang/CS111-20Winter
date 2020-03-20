@@ -1,0 +1,18 @@
+NAME: Senyang Jiang
+EMAIL: senyangjiang@yahoo.com
+ID: 505111806
+
+Included files:
+1.lab4c_tcp.c: source file that communicate with the server through TCP
+2.lab4c_tls.c: source file that communicate with the server through TLS
+3.Makefile: this makefile supports three targets:
+	    default ... build both versions of your program (compiling with the -Wall and -Wextra options).
+	    clean ... delete all programs and output created by the Makefile and restore the directory to its freshly untarred state.
+	    dist ... create the deliverable tarball.
+4.README: descriptions of each of the included files and other comments
+
+Undefined reference to openssl:
+https://stackoverflow.com/questions/8332494/undefined-reference-to-openssl-functions-when-compiling-with-gcc-in-ubuntu-11-10
+
+Using getopt in C with non-option arguments:
+https://stackoverflow.com/questions/18079340/using-getopt-in-c-with-non-option-arguments
