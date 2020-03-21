@@ -61,14 +61,16 @@ void client_shutdown() {
   
   fclose(logfile);
   mraa_aio_close(temp);
-  SSL_shutdown(ssl_client);
+  if(SSL_shutdown(ssl_client) < 0) {
+    fprintf(stderr, "fail to shutdown SSL\n");
+    free_and_exit(2);
+  }
   SSL_free(ssl_client);
   free_and_exit(0);
 }
 
 void command_interpret(char* command) {
   char* period_command = strstr(command, "PERIOD=");
-  char* log_command = strstr(command, "LOG");
 
   fprintf(logfile, command);
   
@@ -97,9 +99,6 @@ void command_interpret(char* command) {
   }
   else if(strcmp(command, "START") == 0) {
     report_flag = 1;
-  }
-  else if(log_command != NULL) {
-    ;
   }
   else if(strcmp(command, "OFF") == 0) {
     client_shutdown();

@@ -64,7 +64,6 @@ void client_shutdown() {
 
 void command_interpret(char* command) {
   char* period_command = strstr(command, "PERIOD=");
-  char* log_command = strstr(command, "LOG");
 
   fprintf(logfile, command);
   
@@ -93,9 +92,6 @@ void command_interpret(char* command) {
   }
   else if(strcmp(command, "START") == 0) {
     report_flag = 1;
-  }
-  else if(log_command != NULL) {
-    ;
   }
   else if(strcmp(command, "OFF") == 0) {
     client_shutdown();
